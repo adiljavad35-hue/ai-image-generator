@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High-Quality AI Image Generator & Editor</title>
+    <!-- Load Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background inspired by development environments */
+            color: #c9d1d9;
+        }
+        .container-wrapper {
+            max-width: 1200px; /* Increased max width for history section */
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .card {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        .button-primary {
+            background-color: #238636;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .button-primary:hover {
+            background-color: #2ea043;
+            transform: translateY(-1px);
+        }
+        .button-primary:disabled {
+            background-color: #23863680;
+            cursor: not-allowed;
+        }
+        .button-auth {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .button-google {
+            background-color: #4285F4;
+            color: white;
+        }
+        .button-google:hover { background-color: #357ae8; }
+        
+        .button-apple {
+            background-color: #000000;
+            color: white;
+        }
+        .button-apple:hover { background-color: #333333; }
+        
+        .button-secondary {
+            background-color: #30363d;
+            border: 1px solid #58a6ff;
+            color: #58a6ff;
+            transition: background-color 0.2s;
+        }
+        .button-secondary:hover {
+            background-color: #58a6ff20;
+        }
+        .aspect-ratio-selector label {
+            cursor: pointer;
+            border: 1px solid #30363d;
+            transition: background-color 0.2s;
+        }
+        .aspect-ratio-selector input:checked + label {
+            background-color: #238636;
+            border-color: #2ea043;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div class="container-wrapper flex-grow">
+        <header class="text-center py-6">
+            <h1 class="text-4xl font-extrabold text-[#58a6ff]">AI Image Editor & Generator</h1>
+            <p class="mt-2 text-gray-400">Image Editing and Generation Powered by Gemini 2.5 Flash</p>
+            <p id="userIdDisplay" class="text-sm text-gray-500 mt-2">Loading authentication...</p>
+        </header>
+
+        <main class="grid lg:grid-cols-3 gap-6 mb-8">
+
+            <!-- Control Panel & Authentication -->
+            <div class="lg:col-span-1 card p-6 rounded-xl space-y-6 h-fit">
+                <h2 class="text-2xl font-semibold mb-4 text-white">User Controls</h2>
+                
+                <!-- Authentication Status/Buttons -->
+                <div id="authContainer">
+                    <div id="authButtons" class="space-y-3">
+                        <button id="googleSignInBtn" class="button-auth button-google w-full" onclick="signInGoogle()">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M22.000 12.188c0-.792-.069-1.55-.187-2.281H12v4.305h5.5c-.244 1.259-.968 2.385-2.07 3.168v2.793h3.582c2.098-1.936 3.327-4.78 3.327-8.035z" fill="#4285F4"/><path d="M12 22c3.242 0 5.955-1.077 7.94-2.919l-3.582-2.793c-.985.666-2.261 1.053-4.358 1.053-3.355 0-6.205-2.274-7.234-5.32H.99v2.883C2.932 20.274 7.11 22 12 22z" fill="#34A853"/><path d="M4.766 14.1c-.227-.666-.356-1.378-.356-2.1s.129-1.434.356-2.1V7.08H.99c-.66 1.439-.99 3.036-.99 4.72 0 1.684.33 3.281.99 4.72l3.776-2.82z" fill="#FBBC05"/><path d="M12 4.75c1.777 0 3.374.606 4.63 1.77l3.175-3.175C17.957 2.059 15.245 1 12 1 7.11 1 2.932 2.726.99 7.08l3.776 2.82C5.795 7.024 8.645 4.75 12 4.75z" fill="#EA4335"/></svg>
+                            Sign in with Google
+                        </button>
+                        <button id="appleSignInBtn" class="button-auth button-apple w-full" onclick="signInApple()">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M12.002 4.629c1.075-.015 2.152.41 2.924 1.266 1.144 1.272 1.488 3.084 1.002 4.697-.674 2.14-2.454 3.428-4.706 3.434-1.928 0-3.664-.99-4.82-2.584-1.127-1.533-1.408-3.414-.712-5.118C7.03 4.22 9.474 3.792 12.002 4.629zM15.42 16.712c.004-.847-.393-1.636-1.05-2.124-.91-.683-1.97-.996-3.05-.98-1.122 0-2.222.376-3.08 1.05-.62.48-1.01 1.26-.95 2.11-.004.81.385 1.58 1.01 2.05.88.67 1.95 1.02 3.06 1.01s2.17-.35 3.05-1.02c.67-.47 1.06-1.25 1.01-2.09z" /></svg>
+                            Sign in with Apple
+                        </button>
+                    </div>
+                    <div id="userInfo" class="hidden text-center mt-3 p-3 rounded-lg bg-gray-700">
+                        <p class="font-semibold" id="displayName"></p>
+                        <p class="text-xs text-gray-400" id="email"></p>
+                        <button class="text-red-400 hover:text-red-300 mt-2 text-sm" onclick="signOutUser()">Sign Out</button>
+                    </div>
+                </div>
+
+                <hr class="border-gray-700">
+
+                <h2 class="text-2xl font-semibold mb-4 text-white">Generation Settings</h2>
+                
+                <!-- Image Upload Input -->
+                <div>
+                    <label for="inputImage" class="block text-sm font-medium mb-2 text-gray-300">Upload Base Image (Optional for editing)</label>
+                    <input type="file" id="inputImage" accept="image/png, image/jpeg, image/webp" class="w-full text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-600 file:text-white hover:file:bg-gray-500 rounded-lg p-1">
+                    <div id="imagePreviewContainer" class="mt-3 hidden text-center">
+                        <p class="text-xs text-gray-400 mb-1">Image loaded for editing:</p>
+                        <img id="imagePreview" class="max-w-full max-h-40 rounded-lg object-contain border border-gray-600 mx-auto" alt="Uploaded Image Preview">
+                    </div>
+                </div>
+
+                <!-- Prompt Input -->
+                <div>
+                    <label for="prompt" class="block text-sm font-medium mb-2 text-gray-300">Image Prompt (Describe the change or the whole scene)</label>
+                    <textarea id="prompt" rows="4" class="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:ring-2 focus:ring-[#58a6ff] focus:border-[#58a6ff]" placeholder="A hyper-realistic photorealistic portrait of a lone astronaut standing on a purple sand dune on Mars, dramatic lighting, 8k, volumetric rays. OR: 'Change the astronaut's helmet to gold and add a small friendly alien waving from behind the dune.'"></textarea>
+                </div>
+
+                <!-- Aspect Ratio Selector (Disabled for Image Editing) -->
+                <div class="aspect-ratio-selector">
+                    <label class="block text-sm font-medium mb-2 text-gray-300">Aspect Ratio (Only for Text-to-Image)</label>
+                    <div class="flex space-x-2">
+                        <!-- 1:1 Square -->
+                        <input type="radio" id="ar-square" name="aspectRatio" value="1:1" class="hidden" checked>
+                        <label for="ar-square" class="flex-1 text-center py-2 px-3 rounded-lg text-sm">1:1</label>
+                        <!-- 16:9 Landscape -->
+                        <input type="radio" id="ar-landscape" name="aspectRatio" value="16:9" class="hidden">
+                        <label for="ar-landscape" class="flex-1 text-center py-2 px-3 rounded-lg text-sm">16:9</label>
+                        <!-- 9:16 Portrait -->
+                        <input type="radio" id="ar-portrait" name="aspectRatio" value="9:16" class="hidden">
+                        <label for="ar-portrait" class="flex-1 text-center py-2 px-3 rounded-lg text-sm">9:16</label>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="generateBtn" class="button-primary w-full py-3 rounded-lg text-lg font-bold text-white uppercase tracking-wider" onclick="generateImage()">
+                    Generate Image
+                </button>
+                
+                <!-- Status Message -->
+                <div id="statusMessage" class="text-center h-5"></div>
+            </div>
+
+            <!-- Image Output and Preview -->
+            <div class="lg:col-span-2 card p-6 rounded-xl flex flex-col">
+                <h2 class="text-2xl font-semibold mb-4 text-white">Generated Output</h2>
+                
+                <div id="imageOutputContainer" class="bg-gray-800 rounded-lg flex-grow flex items-center justify-center p-4 min-h-[400px]">
+                    <p id="placeholderText" class="text-gray-500 text-center">Your high-quality image will appear here after generation.</p>
+                    <!-- Generated Image Placeholder -->
+                    <img id="generatedImage" class="rounded-lg shadow-2xl hidden max-w-full max-h-[80vh] w-full h-auto object-contain" alt="Generated AI Image">
+                </div>
+
+                <!-- Download Button Container -->
+                <div id="downloadContainer" class="mt-4 hidden justify-center">
+                    <button id="downloadBtn" class="button-secondary px-6 py-2 rounded-lg font-semibold" onclick="downloadImage()">
+                        Download Image
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- History Section -->
+        <section class="card p-6 rounded-xl mt-8">
+            <h2 class="text-2xl font-semibold mb-6 text-white">Generation History</h2>
+            <div id="historyLoading" class="text-center text-gray-500 p-8">Loading history...</div>
+            <div id="historyList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- History items will be injected here -->
+            </div>
+            <div id="historyEmpty" class="text-center text-gray-500 p-8 hidden">
+                Your generation history is empty. Generate an image to save your first entry!
+            </div>
+            <div id="historyAuthRequired" class="text-center text-gray-500 p-8 hidden">
+                Sign in above to enable and view your personal generation history.
+            </div>
+        </section>
+
+    </div>
+
+    <footer class="text-center py-4 text-xs text-gray-500 border-t border-gray-800 mt-6">
+        &copy; 2025 AI Image Studio. Powered by Google's Gemini API and Firebase Firestore.
+    </footer>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getAuth, signInAnonymously, GoogleAuthProvider, AppleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        
+        // Set Firestore debug logging
+        setLogLevel('Debug');
+
+        // --- Global Firebase Variables ---
+        let db;
+        let auth;
+        let userId = null;
+        let isAuthReady = false;
+        
+        // --- Image State Variables ---
+        let latestImageUrl = null;
+        let inputImageBase64 = null; // Stores Base64 data part of the uploaded image
+        let inputImageMimeType = null; // Stores the MIME type of the uploaded image
+        
+        // --- API & Utility Setup ---
+        // Note: The apiKey below is a placeholder provided by the Canvas environment for demonstration. 
+        // For public hosting, this API key might need to be replaced if you use a different model.
+        // For the Firebase functions to work, you MUST replace the config object below.
+        const apiKey = "AIzaSyCTOTL7PKN44Glq3k9pO2lIB5bPqw2RA3c"; 
+        const model = "gemini-2.5-flash-image-preview";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        // Utility function for exponential backoff (for robust API calls)
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Get DOM Elements (omitted for brevity)
+        const promptInput = document.getElementById('prompt');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const generatedImage = document.getElementById('generatedImage');
+        const placeholderText = document.getElementById('placeholderText');
+        const downloadContainer = document.getElementById('downloadContainer');
+        const historyList = document.getElementById('historyList');
+        const historyLoading = document.getElementById('historyLoading');
+        const historyEmpty = document.getElementById('historyEmpty');
+        const historyAuthRequired = document.getElementById('historyAuthRequired');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const authButtons = document.getElementById('authButtons');
+        const userInfo = document.getElementById('userInfo');
+        const displayNameElement = document.getElementById('displayName');
+        const emailElement = document.getElementById('email');
+        const inputImageFile = document.getElementById('inputImage');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const aspectRatioLabels = document.querySelectorAll('.aspect-ratio-selector label');
+        
+        // --- Image Upload/Preview Logic ---
+        inputImageFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                inputImageBase64 = null;
+                inputImageMimeType = null;
+                imagePreviewContainer.classList.add('hidden');
+                statusMessage.innerHTML = '';
+                // Enable Aspect Ratio selector if no file is selected
+                aspectRatioLabels.forEach(label => label.classList.remove('opacity-50', 'pointer-events-none'));
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const parts = reader.result.split(',');
+                if (parts.length < 2) {
+                    statusMessage.innerHTML = `<span class="text-red-400">Error reading file.</span>`;
+                    inputImageFile.value = '';
+                    return;
+                }
+
+                const mimeType = parts[0].split(':')[1].split(';')[0];
+                
+                if (!['image/png', 'image/jpeg', 'image/webp'].includes(mimeType)) {
+                     statusMessage.innerHTML = `<span class="text-red-400">Error: Unsupported image type (${mimeType}). Use PNG, JPEG, or WEBP.</span>`;
+                     inputImageFile.value = '';
+                     inputImageBase64 = null;
+                     inputImageMimeType = null;
+                     imagePreviewContainer.classList.add('hidden');
+                     return;
+                }
+
+                inputImageBase64 = parts[1]; // Store just the base64 data part
+                inputImageMimeType = mimeType;
+                imagePreview.src = reader.result;
+                imagePreviewContainer.classList.remove('hidden');
+                statusMessage.innerHTML = `<span class="text-green-400">Base Image loaded for editing. The Aspect Ratio will be determined by this image.</span>`;
+
+                // Disable Aspect Ratio selector when a base image is uploaded
+                aspectRatioLabels.forEach(label => label.add('opacity-50', 'pointer-events-none'));
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- Firebase Initialization and Auth (UPDATED FOR GITHUB PAGES) ---
+
+        function getFirebaseConfig() {
+            // #REPLACE_WITH_YOUR_FIREBASE_CONFIG#
+            // 1. Create a Firebase project in the Firebase Console.
+            // 2. Add a Web App to the project and copy its configuration object.
+            // 3. Paste the config object below, replacing the placeholder values.
+            const FIREBASE_CONFIG = {
+                apiKey: "YOUR_API_KEY", 
+                authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_PROJECT_ID.appspot.com",
+                messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+                appId: "YOUR_APP_ID"
+            };
+
+            if (FIREBASE_CONFIG.apiKey.includes("YOUR_API_KEY")) {
+                console.error("FIREBASE CONFIG ERROR: Please replace the placeholder configuration with your actual Firebase project details to enable authentication and history.");
+                return null;
+            }
+            return FIREBASE_CONFIG;
+        }
+        
+        async function initializeFirebase() {
+            const firebaseConfig = getFirebaseConfig();
+
+            if (firebaseConfig && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Initialize Auth: Sign in anonymously since the Canvas token is not available
+                await signInAnonymously(auth).catch(e => {
+                    console.error("Initial anonymous sign in failed:", e);
+                    statusMessage.innerHTML = `<span class="text-red-400">Firebase initialization failed. Check console for config errors.</span>`;
+                });
+
+
+                // Set up Auth State Listener
+                onAuthStateChanged(auth, (user) => {
+                    isAuthReady = true;
+                    if (user && !user.isAnonymous) {
+                        // User signed in (social)
+                        userId = user.uid;
+                        userIdDisplay.textContent = `User: ${user.displayName || user.email || user.uid}`;
+                        displayNameElement.textContent = user.displayName || 'Authenticated User';
+                        emailElement.textContent = user.email || 'No email provided';
+                        authButtons.classList.add('hidden');
+                        userInfo.classList.remove('hidden');
+                        historyAuthRequired.classList.add('hidden');
+                        console.log("User authenticated:", userId);
+                        loadHistory(); // Load history for authenticated user
+                    } else {
+                        // Anonymous or signed out
+                        userId = user ? user.uid : 'anonymous-' + crypto.randomUUID(); // Assign a dummy ID for anonymous
+                        userIdDisplay.textContent = 'User: Anonymous. Sign in for history.';
+                        authButtons.classList.remove('hidden');
+                        userInfo.classList.add('hidden');
+                        historyAuthRequired.classList.remove('hidden');
+                        historyLoading.classList.add('hidden');
+                        historyList.innerHTML = ''; // Clear history list
+                        historyEmpty.classList.add('hidden'); 
+                    }
+                });
+            } else {
+                console.error("Firebase config is missing or invalid. Authentication and history features disabled.");
+                userIdDisplay.textContent = 'User: Auth Disabled (Missing Firebase Config)';
+                isAuthReady = true;
+                historyLoading.classList.add('hidden');
+                historyAuthRequired.classList.remove('hidden');
+            }
+        }
+
+        // --- Social Authentication Functions ---
+        
+        // FIX: Attached functions to window to make them accessible from inline onclick in HTML
+        window.signInGoogle = async function() {
+            if (!auth || !isAuthReady) {
+                 statusMessage.innerHTML = `<span class="text-red-400">Firebase is not initialized. Check console for config errors.</span>`;
+                 return;
+            }
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                statusMessage.innerHTML = `<span class="text-red-400">Google Sign-In failed: ${error.message}</span>`;
+                console.error("Google Sign-In failed:", error);
+            }
+        };
+
+        // FIX: Attached functions to window to make them accessible from inline onclick in HTML
+        window.signInApple = async function() {
+            if (!auth || !isAuthReady) {
+                 statusMessage.innerHTML = `<span class="text-red-400">Firebase is not initialized. Check console for config errors.</span>`;
+                 return;
+            }
+            const provider = new AppleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                statusMessage.innerHTML = `<span class="text-red-400">Apple Sign-In failed: ${error.message}</span>`;
+                console.error("Apple Sign-In failed:", error);
+            }
+        };
+
+        // FIX: Attached functions to window to make them accessible from inline onclick in HTML
+        window.signOutUser = async function() {
+            if (!auth) return;
+            try {
+                // After signing out, rely on onAuthStateChanged to handle the state change
+                await signOut(auth);
+                // No need to reload, onAuthStateChanged handles the return to anonymous
+            } catch (error) {
+                statusMessage.innerHTML = `<span class="text-red-400">Sign out failed: ${error.message}</span>`;
+                console.error("Sign Out failed:", error);
+            }
+        };
+
+
+        // --- Firestore History Functions (UPDATED FOR GITHUB PAGES) ---
+
+        function getHistoryCollectionRef() {
+            if (!db || !userId) return null;
+            // Using a fixed path for public hosting (no __app_id)
+            const collectionPath = `/public_generations/v1/users/${userId}/generation_history`;
+            return collection(db, collectionPath);
+        }
+
+        async function saveToHistory(prompt, aspectRatio, isEditing) {
+            // Check if the user is authenticated (not anonymous) for history saving
+            if (!isAuthReady || !db || !auth || !auth.currentUser || auth.currentUser.isAnonymous) {
+                console.warn("History save skipped: User is anonymous or not ready.");
+                return;
+            }
+            
+            try {
+                const historyRef = getHistoryCollectionRef();
+                // Save metadata only 
+                await addDoc(historyRef, {
+                    prompt: prompt,
+                    aspectRatio: isEditing ? 'IMAGE_EDIT' : aspectRatio,
+                    isEditing: isEditing,
+                    createdAt: serverTimestamp()
+                });
+                console.log("Generation metadata saved to history successfully.");
+            } catch (error) {
+                console.error("Error saving generation to history:", error);
+            }
+        }
+
+        function loadHistory() {
+             if (!isAuthReady || !db || !userId || auth.currentUser.isAnonymous) {
+                // If not authenticated (social), hide history loading and show auth required message
+                historyLoading.classList.add('hidden');
+                historyAuthRequired.classList.remove('hidden');
+                return;
+            }
+            
+            const historyRef = getHistoryCollectionRef();
+            const q = query(historyRef, orderBy("createdAt", "desc"));
+
+            historyLoading.classList.remove('hidden');
+
+            onSnapshot(q, (snapshot) => {
+                const history = [];
+                snapshot.forEach((doc) => {
+                    history.push({ id: doc.id, ...doc.data() });
+                });
+                
+                renderHistory(history);
+                historyLoading.classList.add('hidden');
+                
+                if (history.length === 0) {
+                    historyEmpty.classList.remove('hidden');
+                } else {
+                    historyEmpty.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Error loading history:", error);
+                historyLoading.textContent = "Error loading history. Try signing out and back in.";
+            });
+        }
+
+        function renderHistory(history) {
+            historyList.innerHTML = '';
+            
+            history.forEach(item => {
+                const arText = item.isEditing ? 'I2I' : item.aspectRatio;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'card rounded-xl overflow-hidden cursor-pointer hover:shadow-lg transition duration-200';
+                itemDiv.setAttribute('title', item.prompt);
+                
+                // Use a placeholder div since full image data cannot be saved to Firestore
+                itemDiv.innerHTML = `
+                    <div class="relative w-full bg-gray-700 flex items-center justify-center text-center text-xs text-gray-400 p-2 min-h-[100px]">
+                        <p>Prompt saved.<br/>Click to load prompt and re-run.</p>
+                    </div>
+                    <div class="p-3">
+                        <p class="text-xs text-gray-400 truncate">${item.prompt}</p>
+                        <p class="text-xs text-gray-600 mt-1">Type: ${arText}</p>
+                    </div>
+                `;
+                
+                // Add click listener to set the image/prompt to the main viewer
+                itemDiv.addEventListener('click', () => {
+                    latestImageUrl = null;
+                    generatedImage.classList.add('hidden');
+                    placeholderText.classList.remove('hidden');
+                    downloadContainer.classList.add('hidden');
+                    statusMessage.innerHTML = `<span class="text-yellow-400">Prompt loaded from history. The original base image for editing is not saved. Click "Generate Image" to re-run.</span>`;
+
+                    promptInput.value = item.prompt;
+                    
+                    // Reset or set aspect ratio based on history item (I2I forces reset)
+                    if (!item.isEditing) {
+                        const radio = document.querySelector(`input[name="aspectRatio"][value="${item.aspectRatio}"]`);
+                        if (radio) radio.checked = true;
+                        aspectRatioLabels.forEach(label => label.classList.remove('opacity-50', 'pointer-events-none'));
+                    } else {
+                        // For I2I history item, we can't restore the image, but we can clear the file input
+                        inputImageFile.value = '';
+                        inputImageBase64 = null;
+                        imagePreviewContainer.classList.add('hidden');
+                        aspectRatioLabels.forEach(label => label.classList.remove('opacity-50', 'pointer-events-none'));
+                    }
+                });
+
+                historyList.appendChild(itemDiv);
+            });
+        }
+
+        // --- Download Function ---
+
+        window.downloadImage = function() {
+            if (!latestImageUrl) {
+                statusMessage.innerHTML = '<span class="text-red-400">No image available to download.</span>';
+                return;
+            }
+
+            try {
+                const a = document.createElement('a');
+                a.href = latestImageUrl;
+                a.download = `ai-image-${Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                statusMessage.innerHTML = '<span class="text-green-400">Download started!</span>';
+            } catch (error) {
+                statusMessage.innerHTML = '<span class="text-red-400">Error initiating download.</span>';
+                console.error("Download failed:", error);
+            }
+        };
+
+        // --- Core Image Generation Logic ---
+
+        window.generateImage = async function() {
+            const userPrompt = promptInput.value.trim();
+            const isEditing = !!inputImageBase64;
+            
+            if (!userPrompt) {
+                statusMessage.innerHTML = `<span class="text-red-400">Please enter a prompt!</span>`;
+                return;
+            }
+             if (!isAuthReady || !auth || !auth.currentUser) {
+                statusMessage.innerHTML = `<span class="text-red-400">Authentication is not ready. Please check Firebase configuration.</span>`;
+                return;
+            }
+
+
+            // UI state management
+            generateBtn.disabled = true;
+            generateBtn.textContent = isEditing ? 'Editing Image...' : 'Generating Image...';
+            statusMessage.innerHTML = `<span class="text-blue-400">Sending request to ${isEditing ? 'Gemini Image Editor' : 'Gemini Text-to-Image'}...</span>`;
+            placeholderText.classList.remove('hidden');
+            generatedImage.classList.add('hidden');
+            downloadContainer.classList.add('hidden');
+            generatedImage.src = '';
+            latestImageUrl = null;
+            
+            let payload;
+            let aspectRatio = document.querySelector('input[name="aspectRatio"]:checked').value; // Default to T2I aspect ratio
+
+            if (isEditing) {
+                // --- Image-to-Image Generation (Gemini 2.5 Flash Image Preview) ---
+                aspectRatio = 'I2I_Aspect_Preserved';
+                const imagePart = { inlineData: { mimeType: inputImageMimeType, data: inputImageBase64 } };
+
+                payload = {
+                    contents: [{
+                        parts: [
+                            { text: userPrompt },
+                            imagePart
+                        ]
+                    }],
+                    generationConfig: {
+                        responseModalities: ['IMAGE'] // Only request the image part
+                    },
+                };
+            } else {
+                // --- Text-to-Image Generation (Gemini 2.5 Flash Image Preview) ---
+                const T2I_Prompt = `Generate a high-quality image with a ${aspectRatio} aspect ratio, based on the following description: ${userPrompt}`;
+                
+                payload = {
+                    contents: [{
+                        parts: [{ text: T2I_Prompt }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ['IMAGE']
+                    },
+                };
+            }
+
+
+            const maxRetries = 3;
+            let currentDelay = 1000;
+            let success = false;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 429 || response.status >= 500) {
+                        if (i < maxRetries - 1) {
+                            statusMessage.innerHTML = `<span class="text-orange-400">Server busy. Retrying in ${currentDelay / 1000}s... (Attempt ${i + 1}/${maxRetries})</span>`;
+                            await delay(currentDelay);
+                            currentDelay *= 2; 
+                            continue;
+                        }
+                    }
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    // Extract Base64 Data from the Gemini 2.5 response structure
+                    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData && p.inlineData.data)?.inlineData?.data;
+
+                    if (!base64Data) {
+                        throw new Error('Image generation failed or no data returned. Check your prompt/image.');
+                    }
+
+                    // Success actions
+                    latestImageUrl = `data:image/png;base64,${base64Data}`;
+                    generatedImage.src = latestImageUrl;
+                    generatedImage.classList.remove('hidden');
+                    placeholderText.classList.add('hidden');
+                    downloadContainer.classList.remove('hidden'); // Show download button
+                    
+                    // Save the successful generation metadata to Firestore
+                    await saveToHistory(userPrompt, aspectRatio, isEditing);
+                    
+                    // Update status message after successful save
+                    statusMessage.innerHTML = `<span class="text-green-400">${isEditing ? 'Image successfully edited' : 'Image successfully generated'}! Prompt saved to history.</span>`;
+
+                    success = true;
+                    break;
+
+                } catch (error) {
+                    statusMessage.innerHTML = `<span class="text-red-400">Error: ${error.message}. Try refining your prompt.</span>`;
+                    console.error("Image generation failed:", error);
+                    placeholderText.classList.remove('hidden');
+                }
+            }
+
+            // Reset UI state
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'Generate Image';
+        }
+
+        // --- Initialization ---
+        window.onload = function() {
+            // Set initial prompt
+            promptInput.value = "A hyper-realistic photorealistic portrait of a lone astronaut standing on a purple sand dune on Mars, dramatic lighting, 8k, volumetric rays.";
+            placeholderText.textContent = "Enter your prompt and click 'Generate Image' to begin. Upload an image to start editing! (Authentication/History requires Firebase setup.)";
+            
+            // Start Firebase initialization and auth
+            initializeFirebase();
+        };
+
+    </script>
+</body>
+</html>
